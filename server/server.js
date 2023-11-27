@@ -32,8 +32,68 @@ app.get("/edit/:userId", (req, res) => {
   }
 });
 
+app.patch('/users/:userId', async (req, res) => {
+  const data = await fs.readFile(dataRoute, 'utf8');
+  const { users } = JSON.parse(data);
+  const userId = parseInt(req.params.userId);
+  const user = users.find(user => user.id === userId);
+
+  if (user) {
+    user.name = req.body.name;
+    await fs.writeFile(dataRoute, JSON.stringify({ users }), 'utf8');
+    return res.send({ state: "DONE" });
+  } else {
+    return res.status(404).send({ state: 'User not found' });
+  }
+});
+
+app.put('/users/:userId', async (req, res) => {
+  const data = await fs.readFile(dataRoute, 'utf8')
+  const { users } = JSON.parse(data);
+  const userId = parseInt(req.params.userId);
+  const user = users.find((user) => user.id === userId);
+
+  if (user) {
+    user.name = req.body.name;
+    user.id = req.body.id;
+    await fs.writeFile(dataRoute, JSON.stringify({ users }), 'utf8');
+    return res.send({ state: "DONE" });
+  } else {
+    return res.status(404).send({ state: 'User not found' });
+  }
+});
+
 app.get("/script.js", (req, res) => {
   res.sendFile(path.join(__dirname, "../client/script.js"));
+});
+
+app.delete('/users/:userId', async (req, res) => {
+  const data = await fs.readFile(dataRoute, 'utf8');
+  const { users } = JSON.parse(data);
+  const userId = parseInt(req.params.userId);
+  const user = users.find(user => user.id === userId);
+
+  if (user) {
+    const newUsers = users.filter((x) => x !== user);
+    await fs.writeFile(dataRoute, JSON.stringify({ users: newUsers }), 'utf8');
+    return res.send({ state: "DONE" });
+  } else {
+    return res.status(404).send({ state: 'User not found' });
+  }
+});
+
+app.post('/users', async (req, res) => {
+  const data = await fs.readFile(dataRoute, 'utf8');
+  const { users } = JSON.parse(data);
+  const userIds = users.map(user => user.id);
+  const maxId = Math.max(...userIds);
+  const newUser = {
+    name: req.body.name,
+    id: maxId + 1
+  }
+  users.push(newUser);
+  await fs.writeFile(dataRoute, JSON.stringify({ users }), 'utf8');
+  return res.send({ state: "DONE" });
 });
 
 const PORT = process.env.PORT || 4000;
